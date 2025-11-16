@@ -120,3 +120,30 @@ if __name__ == "__main__":
         print("Missing BOT_TOKEN")
         exit(1)
     client.run(BOT_TOKEN)
+
+   # === DUMMY WEB SERVER FOR RENDER FREE TIER ===
+    from flask import Flask
+    import threading
+    import os
+
+    app = Flask(__name__)
+
+    @app.route("/")
+    def health():
+        return {
+            "status": "alive",
+            "bot": str(client.user) if client.user else "starting",
+            "guilds": len(client.guilds) if client.is_ready() else 0,
+            "uptime": datetime.now(timezone.utc).isoformat()
+        }, 200
+
+    # Run Discord bot in background
+    def run_bot():
+        client.run(BOT_TOKEN)
+
+    threading.Thread(target=run_bot, daemon=True).start()
+
+    # Run Flask on Render's PORT
+    port = int(os.getenv("PORT", 8080))
+    print(f"Starting Flask on port {port}...")
+    app.run(host="0.0.0.0", port=port)
