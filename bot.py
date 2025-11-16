@@ -2,8 +2,10 @@ import discord
 import httpx
 import asyncio
 import os
+import threading
 from datetime import datetime, timezone
-from config import get_settings
+from flask import Flask  # Add this import at the top
+from config import get_settings  # Assuming this is your settings loader
 
 settings = get_settings()
 
@@ -115,35 +117,35 @@ async def on_member_join(member):
     else:
         print("No API_URL—skipping log")
 
+# Dummy Flask web server for Render (binds to $PORT)
+app = Flask(__name__)
+
+@app.route("/")
+def health():
+    return {
+        "status": "alive",
+        "bot": str(client.user) if client.user else "starting",
+        "guilds": len(client.guilds) if client.is_ready() else 0,
+        "uptime": datetime.now(timezone.utc).isoformat()
+    }, 200
+
 if __name__ == "__main__":
     if not BOT_TOKEN:
         print("Missing BOT_TOKEN")
         exit(1)
-    client.run(BOT_TOKEN)
 
-   # === DUMMY WEB SERVER FOR RENDER FREE TIER ===
-    from flask import Flask
-    import threading
-    import os
-
-    app = Flask(__name__)
-
-    @app.route("/")
-    def health():
-        return {
-            "status": "alive",
-            "bot": str(client.user) if client.user else "starting",
-            "guilds": len(client.guilds) if client.is_ready() else 0,
-            "uptime": datetime.now(timezone.utc).isoformat()
-        }, 200
-
-    # Run Discord bot in background
+    # Run Discord bot in background thread (non-blocking)
     def run_bot():
-        client.run(BOT_TOKEN)
+        try:
+            client.run(BOT_TOKEN)
+        except Exception as e:
+            print(f"Bot thread error: {e}")
 
-    threading.Thread(target=run_bot, daemon=True).start()
+    bot_thread = threading.Thread(target=run_bot, daemon=True)
+    bot_thread.start()
+    print("Bot thread started.")
 
-    # Run Flask on Render's PORT
+    # Start Flask on Render's $PORT (or 8080 fallback)
     port = int(os.getenv("PORT", 8080))
-    print(f"Starting Flask on port {port}...")
-    app.run(host="0.0.0.0", port=port)
+    print(f"Starting Flask health server on port {port}...")
+    app.run(host="0.0.0.0", port=port, debug=False)
