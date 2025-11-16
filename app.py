@@ -118,6 +118,13 @@ def remove_server(server_id):
     db.session.commit()
     return redirect(url_for('dashboard'))
 
+@app.route('/remove_log/<int:log_id>')
+def remove_log(log_id):
+    log = MemberJoin.query.get_or_404(log_id)
+    db.session.delete(log)
+    db.session.commit()
+    return redirect(url_for('dashboard'))
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()

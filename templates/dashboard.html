@@ -30,8 +30,7 @@
                     <i class="fas fa-info-circle me-2"></i>
                     <div>
                         <strong>Bot Invite:</strong> 
-                        <a href="YOUR_OAUTH_URL_HERE" target="_blank" class="alert-link">Invite Bot to Servers</a> 
-                        (Replace with your OAuth URL from Developer Portal)
+                        <a href="https://discord.com/oauth2/authorize?client_id=1439257712956543046&permissions=1024&integration_type=0&scope=bot" target="_blank" class="alert-link">Invite Bot to Servers</a>
                     </div>
                 </div>
             </div>
@@ -105,8 +104,11 @@
         <div class="row">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header bg-info text-white">
+                    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
                         <h5 class="card-title mb-0"><i class="fas fa-chart-line me-2"></i>Recent Joins (Last 50)</h5>
+                        {% if logs|length > 0 %}
+                        <span class="badge bg-light text-dark">{{ logs|length }} Entries</span>
+                        {% endif %}
                     </div>
                     <div class="card-body p-0">
                         {% if logs %}
@@ -119,6 +121,7 @@
                                         <th>Server</th>
                                         <th>Joined (UTC)</th>
                                         <th>Account Created (UTC)</th>
+                                        <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -129,6 +132,7 @@
                                         <td>{{ log.server_name }}</td>
                                         <td>{{ log.join_timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
                                         <td>{{ log.account_created_at.strftime('%Y-%m-%d %H:%M') if log.account_created_at else '<span class="text-muted">N/A</span>' }}</td>
+                                        <td><a href="/remove_log/{{ log.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this log entry?')"><i class="fas fa-trash"></i> Delete</a></td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
